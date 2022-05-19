@@ -1,98 +1,59 @@
 <template>
-  <div class="card-container">
-    <div class="card" v-for="product in productState.products" :key="product.id">
-      <a-card hoverable style="width: 250px">
-        <template #cover>
-          <img
-              alt="example"
-              :src="product.cover"
-          />
-        </template>
-        <a-card-meta>
-          <template #title>
-            <span class="title">{{ product.title }}</span>
+  <a-card class="card">
+    <template #cover>
+      <img alt="example" :src="product.cover" />
+    </template>
+    <a-card-meta>
+      <template #title>
+        <span class="title">{{ product.title }}</span>
+      </template>
+      <template #description>
+        <span class="description">{{ product.description }}</span>
+      </template>
+    </a-card-meta>
+    <span class="price">Цена {{ product.price }} p</span>
+    <div class="footer">
+      <div class="controls">
+        <a-button style="width: 30px" class="button" size="small" type="primary" @click.stop="addHandler(product)">
+          <template #icon>
+            <plus-outlined />
           </template>
-          <template #description>
-            <span class="description">{{ product.description }}</span>
-          </template>
-        </a-card-meta>
-        <span class="price">{{ product.price }} p</span>
-        <div class="footer">
-          <div class="controls">
-            <a-button style="width: 30px" class="button" size="small" type="primary" @click.stop="addHandler(product)">
-              <template #icon>
-                <plus-outlined/>
-              </template>
-            </a-button>
-            <div class="quantity">{{product.quantity}}
-            </div>
-            <a-button style="width: 30px" size="small" type="primary" @click.stop="removeHandler(product)">
-              <minus-outlined/>
-            </a-button>
-          </div>
-        </div>
-      </a-card>
+        </a-button>
+        <div class="quantity">{{ product.quantity }}</div>
+        <a-button style="width: 30px" size="small" type="primary" @click.stop="removeHandler(product)">
+          <minus-outlined />
+        </a-button>
+      </div>
     </div>
-  </div>
+  </a-card>
 </template>
 
 <script setup lang="ts">
-import {MinusOutlined, PlusOutlined} from '@ant-design/icons-vue';
-import {defineEmits, defineProps, onMounted, reactive} from "vue";
-import {mockProductsData} from "@/mock/mockProducts";
+import { defineProps, defineEmits, PropType } from 'vue';
+import { IProduct } from '@/interfaces/product.interfaces';
+import { MinusOutlined, PlusOutlined } from '@ant-design/icons-vue';
 
+defineProps({
+  product: {
+    type: Object as PropType<IProduct>,
+    required: true,
+  },
+});
 
-const productState = reactive<any>({
-  products: [],
-})
+const emit = defineEmits(['add-handler', 'delete-handler']);
 
-const emit = defineEmits([
-  'add-handler',
-  'delete-handler',
-]);
+const addHandler = (product: IProduct) => {
+  emit('add-handler', product);
+};
 
-const addHandler = (product: any) => {
-  let count = product.quantity
-  productState.products = productState.products.map((item: any) => {
-    if (item.id === product.id && product.quantity !== 5) {
-      count++
-      return {...item, quantity: count}
-    } else {
-      return item
-    }
-  })
-  emit("add-handler", {...product,quantity:count})
-}
-
-const removeHandler = (product: any) => {
-  let count = product.quantity
-  productState.products = productState.products.map((item: any) => {
-    if (item.id === product.id && product.quantity !== 0) {
-      count--
-      return {...item, quantity: count}
-    } else {
-      return item
-    }
-  })
-  emit("delete-handler",{...product,quantity:count})
-}
-
-onMounted(() => {
-  productState.products = mockProductsData
-})
-
-
+const removeHandler = (product: IProduct) => {
+  emit('delete-handler', product);
+};
 </script>
 
 <style scoped>
-.card-container {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-}
-
 .card {
-  margin: 10px 0;
+  width: 250px;
 }
 
 .title {

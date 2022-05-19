@@ -10,9 +10,7 @@
     </a-layout-content>
   </a-layout>
 </template>
-<script setup lang="ts">
-
-</script>
+<script setup lang="ts"></script>
 <style scoped>
 .logo {
   color: white;

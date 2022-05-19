@@ -1,85 +1,80 @@
 <template>
-  <a-card class="container" title="title">
+  <a-card class="container" title="Товары">
     <a-row>
       <a-col :span="15">
-        <product-card @add-handler="addHandler" @delete-handler="removeHandler"/>
+        <product-card @add-handler="addHandler" @delete-handler="removeHandler" />
       </a-col>
-      <a-col :offset="1" :span="8">
-        <div v-for="product in basketState.basket" :key="product.id">
-          <div>{{ product.title }}</div>
-          <div>{{ product.total }}</div>
-        </div>
-        {{total}}
+      <a-col :span="8">
+        <product-basket :total="basketState.total" :products="basketState.basket" @handle-order="orderModal = true" />
       </a-col>
     </a-row>
-
-
   </a-card>
+  <template v-if="orderModal">
+    <order-modal
+      :show="orderModal"
+      :products="basketState.basket"
+      :total="basketState.total"
+      @handle-close="handleClose"
+    />
+  </template>
 </template>
 <script setup lang="ts">
-import ProductCard from "@/components/ProductCard.vue";
-import {reactive, ref, watch} from "vue";
+import ProductCard from '@/views/ProductPage.vue';
+import { reactive, ref } from 'vue';
+import OrderModal from '@/components/OrderModal.vue';
+import ProductBasket from '@/components/ProductBasket.vue';
+import { IProduct } from '@/interfaces/product.interfaces';
 
-const basketState = reactive<any>({
-  basket: []
-})
+type BasketStateType = {
+  basket: IProduct[];
+  total: number;
+};
 
-const total = ref(0)
+const basketState = reactive<BasketStateType>({
+  basket: [],
+  total: 0,
+});
 
+const orderModal = ref<boolean>(false);
 
-const addHandler = (product: any) => {
-  const findProduct = basketState.basket.find((item: any) => item.id === product.id)
-  if (findProduct) {
-    basketState.basket = basketState.basket.map((item: any) => {
-      if (item.id === product.id) {
-        const productTotalPrice = product.quantity * product.price
-        return {
-          ...product, total: productTotalPrice
-        }
+const addHandler = (product: IProduct) => {
+  const findProduct = basketState.basket.find((item: IProduct) => item._id === product._id);
+  if (findProduct && findProduct.quantity !== 5) {
+    basketState.total += product.price;
+    basketState.basket = basketState.basket.map((item: IProduct) => {
+      if (item._id === product._id) {
+        return product;
       } else {
-        return item
+        return item;
       }
-    })
-  } else {
-    basketState.basket.push({...product, total: product.price})
+    });
+  } else if (!findProduct) {
+    basketState.basket.push({ ...product });
+    basketState.total += product.price;
   }
+};
 
-}
-
-const removeHandler = (product: any) => {
-  const findProduct = basketState.basket.find((item: any) => item.id === product.id)
-  if (findProduct) {
-    basketState.basket = basketState.basket.map((item: any) => {
-      if (item.id === product.id && product.quantity !== 0) {
-        const productTotalPrice = product.quantity * product.price
-        return {
-          ...product, total: productTotalPrice - product.price
-        }
+const removeHandler = (product: IProduct) => {
+  const findProduct = basketState.basket.find((item: IProduct) => item._id === product._id);
+  if (findProduct && product.quantity !== 0) {
+    basketState.total -= product.price;
+    basketState.basket = basketState.basket.map((item: IProduct) => {
+      if (item._id === product._id) {
+        return product;
       } else {
-        return item
+        return item;
       }
-    })
-  } else {
-    basketState.basket.push({...product, total: product.price})
+    });
+  } else if (findProduct && product.quantity === 0) {
+    const removeIndex = basketState.basket.map((item: IProduct) => item._id).indexOf(product?._id);
+    basketState.basket.splice(removeIndex, 1);
+    basketState.total -= product.price;
   }
-}
+};
 
-watch(()=>[basketState.basket,basketState.basket.length], ([products,count])=>{
-  console.log(count)
-  if (count ===1){
-    products.map((item:any)=>{
-      total.value = item.total
-    })
-  } else {
-    products.map((item:any,index:number)=>{
-      console.log(index)
-      total.value = item.total * index
-    })
-  }
-
-})
-
-
+const handleClose = () => {
+  orderModal.value = false;
+};
 </script>
 <style scoped>
 .container {
